@@ -11,7 +11,7 @@ import (
 	"github.com/o1egl/paseto"
 )
 
-var bearerRE = regexp.MustCompile(`(?i)bearer `)
+var bearerRE = regexp.MustCompile(`(?i)Bearer `)
 
 type TokenHandler struct {
 	publicKeyMap map[paseto.Version]crypto.PublicKey
@@ -108,7 +108,7 @@ func (th TokenHandler) readAuthorization(ctx *gin.Context) (paseto.JSONToken, er
 	}
 
 	// ensure we have a bearer token
-	if bearerRE.MatchString(auth) {
+	if !bearerRE.MatchString(auth) {
 		return jwt, BearTokenError()
 	}
 
@@ -116,7 +116,6 @@ func (th TokenHandler) readAuthorization(ctx *gin.Context) (paseto.JSONToken, er
 	pst := bearerRE.Split(auth, -1)[1]
 
 	// attempt to extract the token
-
 	if err := th.parse(pst, &jwt); err != nil {
 		return jwt, TokenParseError(err.Error())
 	}
