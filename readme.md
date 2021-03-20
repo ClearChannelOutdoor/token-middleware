@@ -9,7 +9,7 @@ package main
 
 import (
   middleware "github.com/clearchanneloutdoor/token-middleware"
-	"github.com/gin-gonic/gin"
+  "github.com/gin-gonic/gin"
 )
 
 func main() {
