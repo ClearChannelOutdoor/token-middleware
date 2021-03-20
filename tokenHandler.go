@@ -92,7 +92,7 @@ func (th TokenHandler) parse(pst string, token *paseto.JSONToken) error {
 	var footer string
 
 	if _, err := paseto.Parse(pst, &token, &footer, th.symmetricKey, th.publicKeyMap); err != nil {
-		return paseto.ErrDataUnmarshal
+		return err
 	}
 
 	return nil
