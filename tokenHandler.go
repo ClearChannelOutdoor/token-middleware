@@ -43,7 +43,7 @@ func NewTokenHandler(keys ...interface{}) TokenHandler {
 
 // ScopeAuthorization provides gin middleware to validate both the scope is as expected and that
 // the token has not expired
-func (th TokenHandler) ScopeAuthorization(scope string, allowedRoles ...string) gin.HandlerFunc {
+func (th TokenHandler) ScopeAuthorization(allowedScopes ...string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		jwt, err := th.readAuthorization(ctx)
 		if err != nil {
@@ -52,18 +52,13 @@ func (th TokenHandler) ScopeAuthorization(scope string, allowedRoles ...string) 
 			return
 		}
 
-		// validate the scope (if provided)
-		assignedRoles := jwt.Get(scope)
-		if assignedRoles == "" {
-			ctx.Error(ScopeMissingError(scope))
-			ctx.Abort()
-			return
-		}
+		// get scopes granted to token
+		assignedScopes := jwt.Get("scope")
 
 		// see if any allowed roles are assigned
 		allowed := false
-		for _, role := range allowedRoles {
-			if strings.Contains(assignedRoles, role) {
+		for _, scope := range allowedScopes {
+			if strings.Contains(assignedScopes, scope) {
 				allowed = true
 				break
 			}
@@ -71,7 +66,7 @@ func (th TokenHandler) ScopeAuthorization(scope string, allowedRoles ...string) 
 
 		// return with error when not allowed
 		if !allowed {
-			ctx.Error(NotAuthorizedError(allowedRoles))
+			ctx.Error(NotAuthorizedError(allowedScopes))
 			ctx.Abort()
 			return
 		}
