@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type AuthError struct {
@@ -31,19 +32,13 @@ func BearTokenError() *AuthError {
 	}
 }
 
-func NotAuthorizedError(roles []string) *AuthError {
+func NotAuthorizedError(scopes []string) *AuthError {
 	return &AuthError{
-		Message: fmt.Sprintf("Client is not assigned any roles allowed for this resource (%s)", roles),
-		Status:  http.StatusUnauthorized,
-		Title:   "Unauthorized",
-	}
-}
-
-func ScopeMissingError(scope string) *AuthError {
-	return &AuthError{
-		Message: fmt.Sprintf("Bearer token does not contain requested scope (%s)", scope),
-		Status:  http.StatusUnauthorized,
-		Title:   "Unauthorized",
+		Message: fmt.Sprintf(
+			"Token is not granted a scope that is allowed for this resource (%s)",
+			strings.Join(scopes, ", ")),
+		Status: http.StatusUnauthorized,
+		Title:  "Unauthorized",
 	}
 }
 
