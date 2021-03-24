@@ -71,7 +71,7 @@ The PASETO bearer tokens are expected to be provided via the inbound request in 
 
 ```http
 GET /v1/things/1234 HTTP/1.1
-Authorization: Bearer v2.private.HkM8o... // <- PASETO token
+Authorization: Bearer v2.local.HkM8o... // <- PASETO token
 ```
 
 #### Middleware
