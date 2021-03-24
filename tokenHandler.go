@@ -1,3 +1,5 @@
+// Package middleware provides handlers for PASETO token verification
+// and authorization for gin-gonic/gin API servers
 package middleware
 
 import (
@@ -73,6 +75,8 @@ func (th TokenHandler) ScopeAuthorization(allowedScopes ...string) gin.HandlerFu
 	}
 }
 
+// ValidToken provides gin middleware that ensures a bearer token in the
+// request has valid and has not expired.
 func (th TokenHandler) ValidToken() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if _, err := th.readAuthorization(ctx); err != nil {
@@ -117,6 +121,8 @@ func (th TokenHandler) readAuthorization(ctx *gin.Context) (paseto.JSONToken, er
 
 	// validate the date
 	if err := jwt.Validate(); err != nil {
+		// set the token on the context for subsequent use
+		ctx.Set("jwt", jwt)
 		return jwt, TokenValidationError(err.Error())
 	}
 
