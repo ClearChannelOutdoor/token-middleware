@@ -53,7 +53,7 @@ The token handler middleware can be initialized with public and/or symmetric key
 
 If the API only requires handling of `v2` PASETO local tokens, the token handler can be initialized with a single 32 byte symmetric key (a `string` or `[]byte` value). If `v2` public, `v2` local and `v1` public keys all require validation, then the token handler can be created with an Ed25519 public key, a 32 byte symmetric key (`string` or `[]byte`) and an RSA public key.
 
-For example, the following creates a v2 private PASETO token parser
+For example, the following creates a v2 local PASETO token parser
 
 ```go
 symmetricKey := "brozeph, where is my secret key?" // 32 bytes
