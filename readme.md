@@ -62,9 +62,10 @@ handler := middleware.NewTokenHandler(symmetricKey)
 
 The following is a reference to the PASETO specification protocol versions and encryption / signing details:
 
- | local | public
-v1| AES-256-CTR + HMAC-SHA384 | 2048-bit RSA public key
-v2| XChaCha20-Poly1305 | Ed25519
+| version | local                     | public                  |
+|---------|---------------------------|-------------------------|
+|    v1   | AES-256-CTR + HMAC-SHA384 | 2048-bit RSA public key |
+|    v2   | XChaCha20-Poly1305        | Ed25519                 |
 
 The PASETO bearer tokens are expected to be provided via the inbound request in the `Authorization` header:
 
