@@ -15,11 +15,17 @@ import (
 
 var bearerRE = regexp.MustCompile(`(?i)Bearer `)
 
+// TokenHandler provides middleware for validating and reading the
+// details from a PASETO token provided as a bearer token on the
+// request
 type TokenHandler struct {
 	publicKeyMap map[paseto.Version]crypto.PublicKey
 	symmetricKey []byte
 }
 
+// NewTokenHandler creates a new middleware handler with the specified keys
+// for properly verifying or decrypting v1 and v2 PASETO tokens provided
+// as bearer tokens within the Authorization header of a request
 func NewTokenHandler(keys ...interface{}) TokenHandler {
 	var symmetricKey []byte
 	keyMap := map[paseto.Version]crypto.PublicKey{}
