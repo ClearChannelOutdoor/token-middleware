@@ -105,20 +105,26 @@ func (th TokenHandler) parse(pst string, token *paseto.JSONToken) error {
 
 func (th TokenHandler) readAuthorization(ctx *gin.Context) (paseto.JSONToken, error) {
 	var jwt paseto.JSONToken
-	auth := ctx.GetHeader("Authorization")
 
-	// ensure a valid auth header
-	if auth == "" {
-		return jwt, AuthorizationMissingError()
+	// look for bearer token in the query
+	pst := ctx.Query("bearer_token")
+
+	// if paseto is not in query, check for a valid auth header
+	if pst == "" {
+		auth := ctx.GetHeader("Authorization")
+
+		if auth == "" {
+			return jwt, AuthorizationMissingError()
+		}
+
+		// ensure we have a bearer token
+		if !bearerRE.MatchString(auth) {
+			return jwt, BearTokenError()
+		}
+
+		// isolate the bearer token (in format "Bearer v2.local.XXXXXXXXX...")
+		pst = bearerRE.Split(auth, -1)[1]
 	}
-
-	// ensure we have a bearer token
-	if !bearerRE.MatchString(auth) {
-		return jwt, BearTokenError()
-	}
-
-	// isolate the bearer token (in format "Bearer v2.local.XXXXXXXXX...")
-	pst := bearerRE.Split(auth, -1)[1]
 
 	// attempt to extract the token
 	if err := th.parse(pst, &jwt); err != nil {
