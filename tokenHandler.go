@@ -53,7 +53,7 @@ func NewTokenHandler(keys ...interface{}) TokenHandler {
 // the token has not expired
 func (th TokenHandler) ScopeAuthorization(allowedScopes ...string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		jwt, err := th.readAuthorization(ctx)
+		jwt, err := th.readJWT(ctx)
 		if err != nil {
 			ctx.Error(err)
 			ctx.Abort()
@@ -85,7 +85,7 @@ func (th TokenHandler) ScopeAuthorization(allowedScopes ...string) gin.HandlerFu
 // request has valid and has not expired.
 func (th TokenHandler) ValidToken() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if _, err := th.readAuthorization(ctx); err != nil {
+		if _, err := th.readJWT(ctx); err != nil {
 			ctx.Error(err)
 			ctx.Abort()
 			return
@@ -103,8 +103,13 @@ func (th TokenHandler) parse(pst string, token *paseto.JSONToken) error {
 	return nil
 }
 
-func (th TokenHandler) readAuthorization(ctx *gin.Context) (paseto.JSONToken, error) {
+func (th TokenHandler) readJWT(ctx *gin.Context) (paseto.JSONToken, error) {
 	var jwt paseto.JSONToken
+
+	// look for the jwt in the context of Gin
+	if t, exists := ctx.Get("jwt"); exists {
+		return t.(paseto.JSONToken), nil
+	}
 
 	// look for bearer token in the query
 	pst := ctx.Query("bearer_token")
@@ -133,10 +138,11 @@ func (th TokenHandler) readAuthorization(ctx *gin.Context) (paseto.JSONToken, er
 
 	// validate the date
 	if err := jwt.Validate(); err != nil {
-		// set the token on the context for subsequent use
-		ctx.Set("jwt", jwt)
 		return jwt, TokenValidationError(err.Error())
 	}
+
+	// set the token on the context for subsequent use
+	ctx.Set("jwt", jwt)
 
 	return jwt, nil
 }
