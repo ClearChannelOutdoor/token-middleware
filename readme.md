@@ -150,3 +150,17 @@ func (c APIController) GetThings(ctx *gin.Context) {
   // do some stuff with the thingOwner...
 }
 ```
+
+##### PASETO
+
+The PASETO value itself is also available for use and is added to the `*gin.Context` per request.
+
+```go
+func (c APIController) GetThings(ctx *gin.Context) {
+  // the middleware has already authorized this request...
+  // retrieve the PASETO...
+  pst := ctx.Get("pst")(string)
+
+  // do some stuff with the PASETO...
+}
+```
