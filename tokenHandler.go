@@ -144,6 +144,7 @@ func (th TokenHandler) readJWT(ctx *gin.Context) (paseto.JSONToken, error) {
 	// set the paseto and decrypted token on the context for subsequent use
 	ctx.Set("pst", pst)
 	ctx.Set("jwt", jwt)
+	ctx.Set("jti", jwt.Jti)
 
 	return jwt, nil
 }
