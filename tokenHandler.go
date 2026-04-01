@@ -6,11 +6,13 @@ import (
 	"crypto"
 	"crypto/ed25519"
 	"crypto/rsa"
+	"encoding/json"
 	"regexp"
 	"strings"
 
+	pasetov4 "aidanwoods.dev/go-paseto"
 	"github.com/gin-gonic/gin"
-	"github.com/o1egl/paseto"
+	oldTimey "github.com/o1egl/paseto"
 )
 
 var bearerRE = regexp.MustCompile(`(?i)Bearer `)
@@ -19,7 +21,7 @@ var bearerRE = regexp.MustCompile(`(?i)Bearer `)
 // details from a PASETO token provided as a bearer token on the
 // request
 type TokenHandler struct {
-	publicKeyMap map[paseto.Version]crypto.PublicKey
+	publicKeyMap map[oldTimey.Version]crypto.PublicKey
 	symmetricKey []byte
 }
 
@@ -28,14 +30,14 @@ type TokenHandler struct {
 // as bearer tokens within the Authorization header of a request
 func NewTokenHandler(keys ...interface{}) TokenHandler {
 	var symmetricKey []byte
-	keyMap := map[paseto.Version]crypto.PublicKey{}
+	keyMap := map[oldTimey.Version]crypto.PublicKey{}
 
 	for _, key := range keys {
 		switch key := key.(type) {
 		case ed25519.PublicKey:
-			keyMap[paseto.Version2] = key
+			keyMap[oldTimey.Version2] = key
 		case rsa.PublicKey:
-			keyMap[paseto.Version1] = key
+			keyMap[oldTimey.Version1] = key
 		case []byte:
 			symmetricKey = key
 		case string:
@@ -93,22 +95,43 @@ func (th TokenHandler) ValidToken() gin.HandlerFunc {
 	}
 }
 
-func (th TokenHandler) parse(pst string, token *paseto.JSONToken) error {
-	var footer string
+func isV4Local(token string) bool {
+	return strings.HasPrefix(token, "v4.local.")
+}
 
-	if _, err := paseto.Parse(pst, &token, &footer, th.symmetricKey, th.publicKeyMap); err != nil {
+func (th TokenHandler) parseV4Local(pst string, token *oldTimey.JSONToken) error {
+	key, err := pasetov4.V4SymmetricKeyFromBytes(th.symmetricKey)
+	if err != nil {
+		return err
+	}
+
+	tok, err := pasetov4.NewParser().ParseV4Local(key, pst, nil)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(tok.ClaimsJSON(), token)
+}
+
+func (th TokenHandler) parse(pst string, token *oldTimey.JSONToken) error {
+	if isV4Local(pst) {
+		return th.parseV4Local(pst, token)
+	}
+
+	var footer string
+	if _, err := oldTimey.Parse(pst, token, &footer, th.symmetricKey, th.publicKeyMap); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (th TokenHandler) readJWT(ctx *gin.Context) (paseto.JSONToken, error) {
-	var jwt paseto.JSONToken
+func (th TokenHandler) readJWT(ctx *gin.Context) (oldTimey.JSONToken, error) {
+	var jwt oldTimey.JSONToken
 
 	// look for the jwt in the context of Gin
 	if t, exists := ctx.Get("jwt"); exists {
-		return t.(paseto.JSONToken), nil
+		return t.(oldTimey.JSONToken), nil
 	}
 
 	// look for bearer token in the query
