@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 
 ---
 
+## [1.3.1] — 2026-04-01
+
+### Changed
+- `readme.md` updated to include v4 in the supported protocol versions table and `TokenHandler` description
+
+---
+
 ## [1.3.0] — 2026-04-01
 
 ### Added

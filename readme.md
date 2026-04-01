@@ -51,9 +51,9 @@ func main() {
 
 The token handler middleware can be initialized with public and/or symmetric keys in order to validate and extract JWT details from PASETO tokens that are provided as Bearer tokens on API requests. 
 
-If the API only requires handling of `v2` PASETO local tokens, the token handler can be initialized with a single 32 byte symmetric key (a `string` or `[]byte` value). If `v2` public, `v2` local and `v1` public keys all require validation, then the token handler can be created with an Ed25519 public key, a 32 byte symmetric key (`string` or `[]byte`) and an RSA public key.
+If the API only requires handling of `v2` or `v4` PASETO local tokens, the token handler can be initialized with a single 32 byte symmetric key (a `string` or `[]byte` value) — the token version is detected automatically from the token prefix. If `v2` public, `v2` local, `v4` local and `v1` public keys all require validation, then the token handler can be created with an Ed25519 public key, a 32 byte symmetric key (`string` or `[]byte`) and an RSA public key.
 
-For example, the following creates a v2 local PASETO token parser
+For example, the following creates a PASETO token parser that handles both v2.local and v4.local tokens
 
 ```go
 symmetricKey := "brozeph, where is my secret key?" // 32 bytes
@@ -66,6 +66,7 @@ The following is a reference to the PASETO specification protocol versions and e
 |---------|---------------------------|-------------------------|
 |    v1   | AES-256-CTR + HMAC-SHA384 | 2048-bit RSA public key |
 |    v2   | XChaCha20-Poly1305        | Ed25519                 |
+|    v4   | XChaCha20-Poly1305        | Ed25519                 |
 
 The PASETO bearer tokens are expected to be provided via the inbound request in the `Authorization` header:
 
