@@ -147,7 +147,7 @@ func (th TokenHandler) readJWT(ctx *gin.Context) (oldTimey.JSONToken, error) {
 
 		// ensure we have a bearer token
 		if !bearerRE.MatchString(auth) {
-			return jwt, BearTokenError()
+			return jwt, BearerTokenError()
 		}
 
 		// isolate the bearer token (in format "Bearer v2.local.XXXXXXXXX...")

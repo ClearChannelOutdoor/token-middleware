@@ -31,7 +31,7 @@ func AuthorizationMissingError() *AuthError {
 
 // BearerTokenError is for when the Authorization header is not
 // properly formatted or does not contain an actual Bearer value
-func BearTokenError() *AuthError {
+func BearerTokenError() *AuthError {
 	return &AuthError{
 		Message: "Bearer token is missing or improperly formatted",
 		Status:  http.StatusUnauthorized,
