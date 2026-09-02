@@ -8,7 +8,7 @@ import (
 
 	pasetov4 "aidanwoods.dev/go-paseto"
 	"github.com/gin-gonic/gin"
-	oldTimey "github.com/o1egl/paseto"
+	legacyPaseto "github.com/o1egl/paseto"
 )
 
 // 32-byte symmetric key used across all tests
@@ -17,7 +17,7 @@ var testKey = []byte("12345678901234567890123456789012")
 func makeV2LocalToken(t *testing.T, key []byte, expiry time.Time, extra map[string]string) string {
 	t.Helper()
 
-	tok := oldTimey.JSONToken{
+	tok := legacyPaseto.JSONToken{
 		Expiration: expiry,
 		IssuedAt:   time.Now(),
 		NotBefore:  time.Now(),
@@ -26,7 +26,7 @@ func makeV2LocalToken(t *testing.T, key []byte, expiry time.Time, extra map[stri
 		tok.Set(k, v)
 	}
 
-	encrypted, err := oldTimey.NewV2().Encrypt(key, tok, nil)
+	encrypted, err := legacyPaseto.NewV2().Encrypt(key, tok, nil)
 	if err != nil {
 		t.Fatalf("V2 encrypt: %v", err)
 	}
