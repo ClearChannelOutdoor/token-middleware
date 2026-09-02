@@ -104,8 +104,8 @@ func TestV4Local_ExpiredToken(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Logf("correctly rejected expired token (gin errors: %v)", w.Body.String())
+	if w.Code == http.StatusOK {
+		t.Errorf("expected rejection for expired token, got %d", w.Code)
 	}
 }
 
