@@ -26,7 +26,7 @@ type TokenHandler struct {
 }
 
 // NewTokenHandler creates a new middleware handler with the specified keys
-// for properly verifying or decrypting v1 and v2 PASETO tokens provided
+// for properly verifying or decrypting v1, v2, and v4 PASETO tokens provided
 // as bearer tokens within the Authorization header of a request
 func NewTokenHandler(keys ...interface{}) TokenHandler {
 	var symmetricKey []byte
@@ -105,7 +105,9 @@ func (th TokenHandler) parseV4Local(pst string, token *legacyPaseto.JSONToken) e
 		return err
 	}
 
-	tok, err := pasetov4.NewParser().ParseV4Local(key, pst, nil)
+	// skip the library's built-in expiry check so jwt.Validate() handles it
+	// consistently with the v2 path, giving callers a uniform TokenValidationError
+	tok, err := pasetov4.NewParserWithoutExpiryCheck().ParseV4Local(key, pst, nil)
 	if err != nil {
 		return err
 	}
