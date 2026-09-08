@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 
 ---
 
-## [1.3.1] — 2026-04-01
+## [1.3.0] — 2026-04-01
 
 ### Added
 - v4.local PASETO token support via `aidanwoods.dev/go-paseto`; token version is detected automatically from the `v4.local.` prefix before dispatch
