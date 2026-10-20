@@ -39,6 +39,13 @@ func BearerTokenError() *AuthError {
 	}
 }
 
+// BearTokenError is a misspelled alias for BearerTokenError.
+//
+// Deprecated: use BearerTokenError.
+func BearTokenError() *AuthError {
+	return BearerTokenError()
+}
+
 // NotAuthorizedError is for when the provided PASETO token is not
 // allowed access due to a scope validation failure
 func NotAuthorizedError(scopes []string) *AuthError {

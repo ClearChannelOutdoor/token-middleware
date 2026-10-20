@@ -13,4 +13,4 @@ All notable changes to this project are documented here.
 
 ### Changed
 - `readme.md` updated to include v4 in the supported protocol versions table and `TokenHandler` description
-- `BearTokenError` renamed to `BearerTokenError` (fixes typo; breaking for callers using the old name)
+- `BearerTokenError` added as the correctly spelled name; `BearTokenError` kept as a deprecated alias (non-breaking)
