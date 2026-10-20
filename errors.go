@@ -31,12 +31,19 @@ func AuthorizationMissingError() *AuthError {
 
 // BearerTokenError is for when the Authorization header is not
 // properly formatted or does not contain an actual Bearer value
-func BearTokenError() *AuthError {
+func BearerTokenError() *AuthError {
 	return &AuthError{
 		Message: "Bearer token is missing or improperly formatted",
 		Status:  http.StatusUnauthorized,
 		Title:   "Unauthorized",
 	}
+}
+
+// BearTokenError is a misspelled alias for BearerTokenError.
+//
+// Deprecated: use BearerTokenError.
+func BearTokenError() *AuthError {
+	return BearerTokenError()
 }
 
 // NotAuthorizedError is for when the provided PASETO token is not

@@ -6,11 +6,13 @@ import (
 	"crypto"
 	"crypto/ed25519"
 	"crypto/rsa"
+	"encoding/json"
 	"regexp"
 	"strings"
 
+	pasetov4 "aidanwoods.dev/go-paseto"
 	"github.com/gin-gonic/gin"
-	"github.com/o1egl/paseto"
+	legacyPaseto "github.com/o1egl/paseto"
 )
 
 var bearerRE = regexp.MustCompile(`(?i)Bearer `)
@@ -19,23 +21,23 @@ var bearerRE = regexp.MustCompile(`(?i)Bearer `)
 // details from a PASETO token provided as a bearer token on the
 // request
 type TokenHandler struct {
-	publicKeyMap map[paseto.Version]crypto.PublicKey
+	publicKeyMap map[legacyPaseto.Version]crypto.PublicKey
 	symmetricKey []byte
 }
 
 // NewTokenHandler creates a new middleware handler with the specified keys
-// for properly verifying or decrypting v1 and v2 PASETO tokens provided
+// for properly verifying or decrypting v1, v2, and v4 PASETO tokens provided
 // as bearer tokens within the Authorization header of a request
 func NewTokenHandler(keys ...interface{}) TokenHandler {
 	var symmetricKey []byte
-	keyMap := map[paseto.Version]crypto.PublicKey{}
+	keyMap := map[legacyPaseto.Version]crypto.PublicKey{}
 
 	for _, key := range keys {
 		switch key := key.(type) {
 		case ed25519.PublicKey:
-			keyMap[paseto.Version2] = key
+			keyMap[legacyPaseto.Version2] = key
 		case rsa.PublicKey:
-			keyMap[paseto.Version1] = key
+			keyMap[legacyPaseto.Version1] = key
 		case []byte:
 			symmetricKey = key
 		case string:
@@ -93,22 +95,45 @@ func (th TokenHandler) ValidToken() gin.HandlerFunc {
 	}
 }
 
-func (th TokenHandler) parse(pst string, token *paseto.JSONToken) error {
-	var footer string
+func isV4Local(token string) bool {
+	return strings.HasPrefix(token, "v4.local.")
+}
 
-	if _, err := paseto.Parse(pst, &token, &footer, th.symmetricKey, th.publicKeyMap); err != nil {
+func (th TokenHandler) parseV4Local(pst string, token *legacyPaseto.JSONToken) error {
+	key, err := pasetov4.V4SymmetricKeyFromBytes(th.symmetricKey)
+	if err != nil {
+		return err
+	}
+
+	// skip the library's built-in expiry check so jwt.Validate() handles it
+	// consistently with the v2 path, giving callers a uniform TokenValidationError
+	tok, err := pasetov4.NewParserWithoutExpiryCheck().ParseV4Local(key, pst, nil)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(tok.ClaimsJSON(), token)
+}
+
+func (th TokenHandler) parse(pst string, token *legacyPaseto.JSONToken) error {
+	if isV4Local(pst) {
+		return th.parseV4Local(pst, token)
+	}
+
+	var footer string
+	if _, err := legacyPaseto.Parse(pst, token, &footer, th.symmetricKey, th.publicKeyMap); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (th TokenHandler) readJWT(ctx *gin.Context) (paseto.JSONToken, error) {
-	var jwt paseto.JSONToken
+func (th TokenHandler) readJWT(ctx *gin.Context) (legacyPaseto.JSONToken, error) {
+	var jwt legacyPaseto.JSONToken
 
 	// look for the jwt in the context of Gin
 	if t, exists := ctx.Get("jwt"); exists {
-		return t.(paseto.JSONToken), nil
+		return t.(legacyPaseto.JSONToken), nil
 	}
 
 	// look for bearer token in the query
@@ -124,7 +149,7 @@ func (th TokenHandler) readJWT(ctx *gin.Context) (paseto.JSONToken, error) {
 
 		// ensure we have a bearer token
 		if !bearerRE.MatchString(auth) {
-			return jwt, BearTokenError()
+			return jwt, BearerTokenError()
 		}
 
 		// isolate the bearer token (in format "Bearer v2.local.XXXXXXXXX...")
